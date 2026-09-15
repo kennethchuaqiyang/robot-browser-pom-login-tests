@@ -1,32 +1,34 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.62.1-jammy'
+            args '-u root'
+        }
+    }
 
     options {
         timestamps()
     }
 
     stages {
-        stage('Create venv') {
+        stage('Install Python dependencies') {
             steps {
-                bat 'python -m venv venv'
+                sh 'apt-get update && apt-get install -y python3-pip'
+                sh 'pip install --break-system-packages -r requirements.txt'
             }
         }
 
-        stage('Install dependencies') {
+        stage('Init Browser library') {
             steps {
-                bat 'venv\\Scripts\\pip install -r requirements.txt'
-            }
-        }
-
-        stage('Install Browser binaries') {
-            steps {
-                bat 'venv\\Scripts\\rfbrowser init'
+                // Browsers already present in this image at the matching version,
+                // so skip re-downloading them — just set up the JS-side wrapper.
+                sh 'rfbrowser init --skip-browsers'
             }
         }
 
         stage('Run tests') {
             steps {
-                bat 'venv\\Scripts\\robot --outputdir results tests\\login_tests.robot'
+                sh 'robot --outputdir results tests/login_tests.robot'
             }
         }
     }
