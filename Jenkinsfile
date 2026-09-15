@@ -14,8 +14,7 @@ pipeline {
         stage('Install Python dependencies') {
             steps {
                 sh 'apt-get update && apt-get install -y python3-pip'
-                sh 'pip install --break-system-packages -r requirements.txt'
-            }
+                sh 'pip3 install -r requirements.txt'            }
         }
 
         stage('Init Browser library') {
